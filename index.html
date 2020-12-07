@@ -1,0 +1,87 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+    <h3>Leer datos de un excel con jquery</h3>
+    <div style="border: 1px solid whitesmoke; padding-bottom: 10px;">
+        <label for="">Archivo excel para html: </label>
+        <br>
+        <br>
+        <input type="file" id="file-import" accept=".xlsx" style="padding-bottom: 10px;">
+    </div>
+    <div style="border: 1px solid whitesmoke; padding-bottom: 10px;">
+        <label for="">Archivo excel para json: </label>
+        <br>
+        <br>
+        <input type="file" id="file-import-json" accept=".xlsx" style="padding-bottom: 10px;">
+    </div>
+
+    <div id="wrapper" style="padding-top: 5px; border: 1px solid black;">
+
+    </div>
+
+    <script>
+        $(document).ready(function () {
+            console.log('JQuery Ready');
+        });
+
+        $('#file-import').change(function (e) {
+            console.log('> New File');
+            
+            var reader = new FileReader();
+            reader.readAsArrayBuffer(e.target.files[0]);
+
+            reader.onload = function(e) {
+                var data = new Uint8Array(reader.result);
+                var wb = XLSX.read(data, {type: 'array'});
+
+                var htmlstr = XLSX.write(wb, {
+                    type: 'binary', bookType: 'html'
+                });
+                
+                $('#wrapper').empty();
+                console.log('> Print HTML');
+                $('#wrapper')[0].innerHTML += htmlstr;
+            };
+        });
+
+        $('#file-import-json').change(function(e){
+            console.log('> New File');
+
+            var reader = new FileReader();
+            var file = e.target.files[0];
+
+            reader.readAsBinaryString(file);
+
+            reader.onload = function(e){
+                var data = e.target.result;
+                var workbook = XLSX.read(data, {
+                    type: 'binary', cellDates: true, cellText:false
+                });
+
+                var firstSheetName = workbook.SheetNames[0];
+                var XLRowObject = XLSX.utils.sheet_to_json(workbook.Sheets[firstSheetName], {raw: false, dateNF: "YYYY-MM-DD"});
+                var jsonObject = JSON.stringify(XLRowObject);
+
+                console.log('> Print JSON');
+                $('#wrapper').empty();
+                $('#wrapper')[0].innerHTML = jsonObject;
+
+                // $('#wrapper')[0].innerHTML += '<br><br>';
+                // console.log(XLRowObject);
+            };
+
+            reader.onerror = function(e){
+                alert('Error: ' + e.target.error.code);
+            }
+
+        });
+    </script>
+</body>
+</html>
